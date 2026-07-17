@@ -1,0 +1,40 @@
+# Keep the build context small and reproducible.
+# (This applies to the backend image, whose build context is the repo root.)
+
+# Python virtualenvs (the committed .venv is huge — never ship it)
+**/.venv
+**/venv
+**/env
+
+# Python caches / build junk
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# Node (frontend has its own build; not needed in the backend image)
+**/node_modules
+**/dist
+frontend/
+
+# Runtime state — must live in a volume, never baked into the image
+backend/data/
+
+# Secrets (injected at runtime via env_file / environment)
+**/.env
+**/.env.*
+!**/.env.example
+
+# VCS / OS / docs / large assets
+.git/
+**/.DS_Store
+*.docx
+error404.png
+
+# The Docker files themselves
+docker-compose.yml
+**/Dockerfile
+.dockerignore
+DOCKER.md

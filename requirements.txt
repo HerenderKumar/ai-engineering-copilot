@@ -1,0 +1,44 @@
+# Install:  pip install -r requirements.txt
+# Python 3.13+? See the tree-sitter note below.
+
+# ----- Web framework -----
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.1
+pydantic-settings>=2.2.1
+
+# ----- Vector store & math -----
+faiss-cpu>=1.8.0
+numpy>=1.26.0
+
+# ----- Embeddings + reranker (heavy: torch; loaded lazily at runtime) -----
+sentence-transformers>=2.5.1
+torch>=2.2.0
+
+# ----- LLM (modern google-genai SDK) -----
+google-genai>=1.0.0
+
+# ----- Parsing (the AST layer) -----
+# Option A (Python <= 3.12): prebuilt grammar wheels, pinned pair:
+tree-sitter==0.21.3; python_version < "3.13"
+tree-sitter-languages==1.10.2; python_version < "3.13"
+# Option B (Python >= 3.13): the maintained successor (same API; the code
+# auto-detects whichever is installed):
+tree-sitter>=0.23; python_version >= "3.13"
+tree-sitter-language-pack>=0.6; python_version >= "3.13"
+
+# ----- Knowledge graph -----
+networkx>=3.2          # graph build + Louvain communities + layout fallback
+# python-igraph>=0.11  # OPTIONAL: C-speed 3D layout for large graphs
+#                        (graph_layout.py auto-falls back to networkx without it)
+
+# ----- Queue / cache -----
+redis>=5.0.3
+
+# ----- Utils -----
+python-multipart>=0.0.9
+requests>=2.31.0
+PyYAML>=6.0
+
+# ----- Dev / test -----
+pytest>=8.0.0
+httpx>=0.27.0

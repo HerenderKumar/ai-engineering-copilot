@@ -1,0 +1,125 @@
+# One command to run the whole stack:  docker compose up --build
+#
+# Services:
+#   redis     — job queue + status/cache      (internal only)
+#   backend   — FastAPI API                    → http://localhost:8000  (/docs)
+#   worker    — ingestion consumer (same image as backend, different command)
+#   frontend  — built React app via nginx      → http://localhost:5173
+#
+# First run downloads the BGE-M3 embedder (~2.3 GB) into the shared hf-cache
+# volume on the first ingestion — expect several minutes ONCE, then it's cached.
+name: ai-copilot
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    # Uncomment to inspect Redis from the host:
+    # ports: ["6379:6379"]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: ai-copilot-backend:latest
+    restart: unless-stopped
+    env_file:
+      - backend/.env
+    environment:
+      # Override the .env localhost values for the compose network:
+      - REDIS_URL=redis://redis:6379/0
+      - HF_HOME=/opt/hf-cache
+      - LOG_JSON=true
+      # Offline model loading: hf.co is unreachable from this machine (conn
+      # black-hole → the embedder load hangs forever without these). Models
+      # below are fully present in the mounted cache; bge-m3's weights are NOT.
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      - EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+      - EMBEDDING_DIM=384
+      # Local-LLM fallback: Ollama runs on the HOST (`ollama serve`); reach it
+      # through the host alias (native on Docker Desktop, mapped below for Linux).
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    volumes:
+      - copilot-data:/app/backend/data     # FAISS + sqlite + graph.db + repos + okf
+      - ${HOME}/.cache/huggingface:/opt/hf-cache   # host HF cache: download models on the Mac, containers use them             # embedder/reranker weights (shared)
+      # Local-folder ingestion (offline): host folders visible read-only.
+      # In the UI, paste e.g. /host/Downloads/my-project as the "repo URL".
+      # (Mounted on the backend too — the API validates the path exists.)
+      - ${HOME}/Downloads:/host/Downloads:ro
+      # Live code overlay: containers run the HOST'S app/ code, so code
+      # changes need only `docker compose restart backend worker` — no image
+      # rebuild (and no network) required.
+      - ./backend/app:/app/backend/app:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile        # same image as backend (built once, cached)
+    image: ai-copilot-backend:latest
+    restart: unless-stopped
+    command: ["python", "-m", "app.workers.ingestion_worker"]
+    env_file:
+      - backend/.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - HF_HOME=/opt/hf-cache
+      - LOG_JSON=true
+      - HF_HUB_OFFLINE=1              # see backend service note
+      - TRANSFORMERS_OFFLINE=1
+      - EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+      - EMBEDDING_DIM=384
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434   # LLM fallback, see backend note
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - copilot-data:/app/backend/data      # shares the same data as the API
+      - ${HOME}/.cache/huggingface:/opt/hf-cache   # host HF cache: download models on the Mac, containers use them
+      - ${HOME}/Downloads:/host/Downloads:ro   # local-folder ingestion (offline)
+      - ./backend/app:/app/backend/app:ro      # live code overlay (see backend)
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    # Scale ingestion throughput:  docker compose up --scale worker=3
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,redis; redis.from_url(os.environ['REDIS_URL']).ping()"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ai-copilot-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    volumes:
+      # Serve the HOST-built bundle (`cd frontend && npm run build`) instead of
+      # the image's baked copy — frontend changes need no image rebuild (and no
+      # npm-registry network, which is unreliable on this machine).
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+
+volumes:
+  copilot-data:
+
+  redis-data:

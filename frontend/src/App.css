@@ -1,0 +1,160 @@
+/* Self-contained dark theme (the old JSX used Tailwind classes but Tailwind
+   was never installed — plain CSS keeps the build dependency-free). */
+
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.topbar h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.ingest-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ingest-row input,
+.chat-input input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #3a3f4a;
+  background: #14171f;
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.btn {
+  background: #3d6bfd;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.small { padding: 0.25rem 0.6rem; font-size: 0.8rem; }
+
+.status-row {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.badge {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #2c3140;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.badge.completed { background: #1d4d2b; color: #7fe3a1; }
+.badge.processing, .badge.queued { background: #4d3b1d; color: #e3c77f; }
+.badge.failed { background: #4d1d1d; color: #e37f7f; }
+
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+.error { color: #ff7b7b; }
+.hint { color: #8a90a0; font-size: 0.9rem; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 1.25rem 0 1rem;
+  border-bottom: 1px solid #2c3140;
+  padding-bottom: 0.6rem;
+}
+.tab {
+  background: transparent;
+  border: 1px solid #2c3140;
+  color: inherit;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tab.active { background: #3d6bfd; border-color: #3d6bfd; color: #fff; }
+.tab:disabled { opacity: 0.4; cursor: default; }
+
+/* Chat */
+.chat-log {
+  min-height: 320px;
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+.bubble {
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  max-width: 85%;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.bubble.user { align-self: flex-end; background: #3d6bfd; color: #fff; }
+.bubble.assistant { align-self: flex-start; background: #1b1f2a; border: 1px solid #2c3140; }
+.sources { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem; }
+.chip {
+  background: #2c3140;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.72rem;
+}
+.chat-input { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+/* Analysis */
+.analysis { display: flex; flex-direction: column; gap: 1rem; }
+.panel {
+  background: #14171f;
+  border: 1px solid #2c3140;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+.panel h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+.panel ul { margin: 0.25rem 0 0 1.2rem; padding: 0; }
+.panel li { margin: 0.2rem 0; }
+
+/* Graph */
+.graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+.kind-toggle { display: flex; gap: 0.3rem; align-items: center; }
+.graph-stats { margin-left: auto; color: #8a90a0; }
+.low-conf { color: #e15759; }
+.graph-canvas {
+  border: 1px solid #2c3140;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.node-card {
+  margin-top: 0.6rem;
+  background: #14171f;
+  border: 1px solid #2c3140;
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.node-card code {
+  background: #1b1f2a;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
